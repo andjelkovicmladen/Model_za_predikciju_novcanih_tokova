@@ -1,0 +1,28 @@
+# ---- Secrets / env (NEVER commit real env files; .env.example IS committed) ----
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# ---- Prisma generated client (regenerated on build) ----
+frontend/lib/generated/
+
+# ---- Python ----
+analytics/venv/
+**/__pycache__/
+*.pyc
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.vercel

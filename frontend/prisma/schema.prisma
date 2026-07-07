@@ -1,0 +1,63 @@
+// Cash Flow Forecasting & Analytics Dashboard — Prisma schema
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Cash-flow direction for a transaction.
+enum FlowType {
+  INFLOW
+  OUTFLOW
+}
+
+/// High-level accounting bucket a transaction belongs to.
+enum Category {
+  REVENUE
+  PAYROLL
+  OPERATING_EXPENSES
+  SOFTWARE
+  TAXES
+  MARKETING
+  OTHER
+}
+
+/// A single historical cash-flow transaction.
+model Transaction {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  description String
+  category    Category
+  type        FlowType
+  /// Positive magnitude of the transaction in whole currency units.
+  amount      Decimal  @db.Decimal(14, 2)
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([type])
+  @@index([category])
+  @@map("transactions")
+}
+
+/// Cached, pre-computed forecast for a single future day, produced by the
+/// Python forecasting engine and read directly by the dashboard for fast loads.
+model ForecastedData {
+  id               String   @id @default(cuid())
+  /// The future calendar day this row forecasts.
+  date             DateTime @unique @db.Date
+  predictedInflow  Decimal  @db.Decimal(14, 2)
+  predictedOutflow Decimal  @db.Decimal(14, 2)
+  /// Projected end-of-day cash balance (running cumulative position).
+  predictedBalance Decimal  @db.Decimal(14, 2)
+  /// Model identifier used to produce this row (e.g. "linreg+ma7").
+  model            String
+  generatedAt      DateTime @default(now())
+
+  @@index([date])
+  @@map("forecasted_data")
+}

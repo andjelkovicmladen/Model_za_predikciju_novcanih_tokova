@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"prisma/migrations/0_init\")",
+      "Bash(npx prisma *)",
+      "Bash(echo \"EXIT: $?\")"
+    ]
+  }
+}

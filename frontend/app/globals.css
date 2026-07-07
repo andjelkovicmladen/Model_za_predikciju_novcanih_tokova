@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/*
+ * Executive financial dashboard theme — a fixed dark palette tuned for
+ * long dashboard sessions: deep slate surfaces, emerald for inflow/positive,
+ * rose for outflow/burn, sky/blue for forecast/projection.
+ */
+:root {
+  --background: #070b16;
+  --surface: #0d1425;
+  --surface-2: #111a30;
+  --border: #1e293b;
+  --foreground: #e6edf7;
+  --muted: #8695ad;
+
+  --inflow: #34d399; /* emerald-400 */
+  --outflow: #fb7185; /* rose-400 */
+  --forecast: #60a5fa; /* blue-400 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-inflow: var(--inflow);
+  --color-outflow: var(--outflow);
+  --color-forecast: var(--forecast);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(56, 189, 248, 0.08), transparent 60%),
+    radial-gradient(1000px 500px at 0% 0%, rgba(52, 211, 153, 0.06), transparent 55%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Tabular figures keep financial numbers aligned across rows. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
