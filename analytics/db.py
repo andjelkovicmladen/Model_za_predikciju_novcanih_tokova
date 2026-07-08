@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import psycopg
 from dotenv import load_dotenv
@@ -46,11 +46,17 @@ def _load_database_url() -> tuple[str, str]:
         )
 
     parts = urlsplit(raw)
-    query = parse_qs(parts.query)
-    search_path = query.get("schema", ["public"])[0]
+    # Drop the Prisma-only `schema` param (libpq rejects it) but KEEP everything
+    # else — notably `sslmode=require`, which cloud providers like Neon need.
+    search_path = "public"
+    kept: list[tuple[str, str]] = []
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        if key == "schema":
+            search_path = value or "public"
+        else:
+            kept.append((key, value))
 
-    # Strip the Prisma-only query string; psycopg/libpq rejects `schema`.
-    conninfo = urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+    conninfo = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(kept), ""))
     return conninfo, search_path
 
 
