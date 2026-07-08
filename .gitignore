@@ -22,7 +22,8 @@ analytics/venv/
 **/__pycache__/
 *.pyc
 
-# ---- OS / editor ----
+# ---- OS / editor / local tooling ----
 .DS_Store
 Thumbs.db
 .vercel
+.claude/
