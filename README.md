@@ -10,6 +10,9 @@ picture — historical actuals blending into a dashed projection, month-over-mon
 inflow/outflow breakdown, runway & burn-rate widget, threshold/anomaly alerts,
 and a recent-transactions table.
 
+> **Live demo:** deploys to Vercel with a serverless Postgres (Neon). See
+> [Deployment](#deployment-vercel--neon). Add your production URL here once live.
+
 ```
 ┌─────────────┐   writes/reads    ┌──────────────┐   Prisma (pg adapter)   ┌───────────────┐
 │  Python      │ ───────────────▶ │  PostgreSQL   │ ◀────────────────────── │  Next.js app   │
@@ -54,7 +57,9 @@ and a recent-transactions table.
 ## Prerequisites
 
 - **Node.js 18+** and **Python 3.10+** (developed on Node 24 / Python 3.14).
-- **PostgreSQL 13+** running locally (e.g. the EnterpriseDB Windows installer).
+- **PostgreSQL 13+** — locally (developed on PostgreSQL 18, EnterpriseDB Windows
+  installer) or a cloud instance such as [Neon](https://neon.tech) (see
+  [Deployment](#deployment-vercel--neon)).
 
 Dependencies are already installed by the initial setup. If you clone fresh:
 
@@ -72,11 +77,16 @@ cd ../analytics && python -m venv venv && ./venv/Scripts/python -m pip install -
    # or in psql:  CREATE DATABASE cashflow;
    ```
 
-2. **Point the app at it.** Edit `frontend/.env` and replace `CHANGE_ME` with
-   your real Postgres password (this one file is the single source of truth —
-   both Prisma and the Python engine read it):
+2. **Point the app at it.** Copy the template and set your real password (this
+   one file is the single source of truth — both Prisma and the Python engine
+   read it, and it is git-ignored):
+
+   ```bash
+   cp frontend/.env.example frontend/.env
+   ```
 
    ```
+   # frontend/.env
    DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/cashflow?schema=public"
    ```
 
@@ -111,6 +121,54 @@ setup screen with these exact steps instead of crashing.
 
 To refresh the forecast at any time (e.g. after new data), re-run
 `forecast.py`; the dashboard reads the latest values on every request.
+
+## Deployment (Vercel + Neon)
+
+The Next.js app deploys to **Vercel**. Because a Vercel serverless function can't
+reach a `localhost` database, production uses a **cloud PostgreSQL** — this
+project uses a free [Neon](https://neon.tech) database. The exact same
+`DATABASE_URL` mechanism drives both local and cloud: `analytics/db.py` preserves
+`sslmode=require` (and any other DSN params) so the Python engine connects to
+Neon too.
+
+### 1. Create and seed a cloud database (once)
+
+Create a Neon project, then run the migration + seed + forecast against it. Pass
+the connection string inline so your local `.env` stays pointed at local Postgres:
+
+```bash
+# Use the DIRECT (non-pooled) Neon string for migrations/seeding
+export NEON="postgresql://<user>:<pass>@<endpoint>.<region>.aws.neon.tech/neondb?sslmode=require"
+
+cd frontend
+DATABASE_URL="$NEON" npx prisma migrate deploy          # create tables + enums
+
+cd ../analytics
+DATABASE_URL="$NEON" ./venv/Scripts/python generate_mock_data.py
+DATABASE_URL="$NEON" ./venv/Scripts/python forecast.py
+```
+
+### 2. Import the repo into Vercel
+
+1. **Vercel → Add New… → Project** and import this GitHub repo.
+2. Set **Root Directory** to `frontend` (the Next.js app lives there). Framework
+   is auto-detected as Next.js; the build command is `prisma generate && next build`
+   (defined in `frontend/package.json`, so the Prisma client is regenerated on
+   every deploy).
+3. Add an **Environment Variable** `DATABASE_URL` set to the Neon **pooled**
+   connection string — the host contains `-pooler` — which is required for
+   serverless connection pooling:
+
+   ```
+   postgresql://<user>:<pass>@<endpoint>-pooler.<region>.aws.neon.tech/neondb?sslmode=require
+   ```
+
+4. **Deploy.** The dashboard is fully server-rendered on demand (`force-dynamic`),
+   so it always reflects the latest data in Neon.
+
+> **Secrets:** real connection strings live only in `.env` (git-ignored) and in
+> Vercel's env vars. Only `frontend/.env.example` (a placeholder template) is
+> committed.
 
 ## API endpoints
 
