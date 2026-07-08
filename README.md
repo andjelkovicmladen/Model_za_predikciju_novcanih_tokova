@@ -10,8 +10,9 @@ picture — historical actuals blending into a dashed projection, month-over-mon
 inflow/outflow breakdown, runway & burn-rate widget, threshold/anomaly alerts,
 and a recent-transactions table.
 
-> **Live demo:** deploys to Vercel with a serverless Postgres (Neon). See
-> [Deployment](#deployment-vercel--neon). Add your production URL here once live.
+> **🔴 Live demo:** **[model-za-predikciju-novcanih-tokova.vercel.app](https://model-za-predikciju-novcanih-tokova.vercel.app/)**
+> — deployed on Vercel with a serverless Postgres (Neon). See
+> [Deployment](#deployment-vercel--neon).
 
 ```
 ┌─────────────┐   writes/reads    ┌──────────────┐   Prisma (pg adapter)   ┌───────────────┐
